@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FocusFlow — ежедневник</title>
+    
+    <!-- iOS мета-теги -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FocusFlow">
+    <meta name="theme-color" content="#6C8CFF">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- Шрифты и стили -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Библиотеки -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app" id="app">
+        <!-- Шапка -->
+        <header class="header">
+            <div class="header-left">
+                <button class="icon-btn menu-btn" id="menuBtn">☰</button>
+            </div>
+            <h1 class="title" id="headerTitle">Мой день</h1>
+            <div class="header-right">
+                <button class="icon-btn settings-btn" id="openSettings">⚙️</button>
+            </div>
+        </header>
+
+        <!-- Боковое меню (для быстрого доступа) -->
+        <div class="side-menu hidden" id="sideMenu">
+            <div class="menu-header">
+                <h2>Меню</h2>
+                <button class="close-menu" id="closeMenu">×</button>
+            </div>
+            <ul class="menu-items">
+                <li data-tab="tasks">📋 Задачи</li>
+                <li data-tab="stats">📊 Статистика</li>
+                <li data-tab="archive">📦 Архив</li>
+                <li data-tab="achievements">🏆 Достижения</li>
+            </ul>
+            
+            <!-- Streak в меню -->
+            <div class="menu-streak">
+                <span>🔥 Серия</span>
+                <span class="streak-value" id="menuStreak">0</span>
+            </div>
+        </div>
+
+        <!-- Основное содержимое -->
+        <main class="main" id="mainContent">
+            <!-- Вкладка ЗАДАЧИ -->
+            <div class="tab-content active" id="tasksTab">
+                <div class="task-stats-header">
+                    <div class="streak-badge">
+                        <span>🔥</span>
+                        <span id="streakDisplay">0</span>
+                    </div>
+                    <div class="points-badge">
+                        <span>⭐</span>
+                        <span id="pointsDisplay">0</span>
+                    </div>
+                    <div class="level-badge">
+                        <span>📊 Ур.</span>
+                        <span id="levelDisplay">1</span>
+                    </div>
+                </div>
+
+                <!-- Форма добавления задачи (быстрая) -->
+                <div class="quick-add">
+                    <input type="text" class="quick-input" id="quickTaskInput" placeholder="Новая задача...">
+                    <button class="quick-add-btn" id="quickAddBtn">+</button>
+                </div>
+
+                <!-- Список задач -->
+                <div class="task-list-container">
+                    <ul class="task-list" id="taskList"></ul>
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon">📝</div>
+                        <p>Нет задач. Добавьте новую!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка СТАТИСТИКА -->
+            <div class="tab-content" id="statsTab">
+                <div class="stats-header">
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <span class="stat-icon">✅</span>
+                            <span class="stat-value" id="statToday">0</span>
+                            <span class="stat-label">сегодня</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">⭐</span>
+                            <span class="stat-value" id="statPoints">0</span>
+                            <span class="stat-label">очков</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">🔥</span>
+                            <span class="stat-value" id="statStreak">0</span>
+                            <span class="stat-label">дней</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">📊</span>
+                            <span class="stat-value" id="statLevel">1</span>
+                            <span class="stat-label">уровень</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Графики -->
+                <div class="chart-container">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+
+                <div class="category-stats" id="categoryStats"></div>
+            </div>
+
+            <!-- Вкладка АРХИВ -->
+            <div class="tab-content" id="archiveTab">
+                <h2 class="tab-title">Архив выполненных</h2>
+                <ul class="archive-list" id="archiveList"></ul>
+                <button class="btn secondary clear-archive-btn" id="clearArchive">Очистить архив</button>
+            </div>
+
+            <!-- Вкладка ДОСТИЖЕНИЯ -->
+            <div class="tab-content" id="achievementsTab">
+                <h2 class="tab-title">Достижения</h2>
+                <div class="achievements-grid" id="achievementsGrid"></div>
+            </div>
+        </main>
+
+        <!-- Плавающие кнопки -->
+        <button class="fab" id="openAddModal">+</button>
+        <button class="ai-fab" id="aiFab">✨</button>
+
+        <!-- Модальное окно ЗАДАЧА (полное) -->
+        <div class="modal-overlay hidden" id="taskModal">
+            <div class="modal">
+                <h2 class="modal-title" id="modalTitle">Новая задача</h2>
+                <form id="taskForm">
+                    <div class="form-group">
+                        <label>Название <span class="required">*</span></label>
+                        <input type="text" id="taskText" required placeholder="Что нужно сделать?">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Описание (необязательно)</label>
+                        <textarea id="taskDescription" rows="2" placeholder="Подробности..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Категория</label>
+                            <select id="taskCategory"></select>
+                        </div>
+                        <div class="form-group half">
+                            <label>Приоритет</label>
+                            <select id="taskPriority">
+                                <option value="low">🟢 Низкий</option>
+                                <option value="medium" selected>🟡 Средний</option>
+                                <option value="high">🔴 Высокий</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Дата</label>
+                            <input type="date" id="taskDate">
+                        </div>
+                        <div class="form-group half">
+                            <label>Повтор</label>
+                            <select id="taskRepeat">
+                                <option value="">Нет</option>
+                                <option value="daily">Ежедневно</option>
+                                <option value="weekly">Еженедельно</option>
+                                <option value="monthly">Ежемесячно</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Подзадачи -->
+                    <div class="form-group">
+                        <label>Подзадачи</label>
+                        <div class="subtasks-container" id="subtasksContainer">
+                            <!-- Здесь будут динамические подзадачи -->
+                        </div>
+                        <button type="button" class="btn small secondary" id="addSubtaskBtn">+ Добавить подзадачу</button>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn secondary" id="closeModal">Отмена</button>
+                        <button type="submit" class="btn primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальное окно НАСТРОЙКИ (исправленная версия) -->
+<div class="modal-overlay hidden" id="settingsModal">
+    <div class="modal">
+        <h2>Настройки</h2>
+        
+        <div class="form-group">
+            <label>Тема</label>
+            <select id="themeSelect">
+                <option value="auto">🌓 Авто</option>
+                <option value="light">☀️ Светлая</option>
+                <option value="dark">🌙 Тёмная</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Акцентный цвет</label>
+            <div class="color-picker">
+                <input type="color" id="accentColorPicker" value="#6C8CFF">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Размер шрифта</label>
+            <select id="fontSizeSelect">
+                <option value="small">Маленький</option>
+                <option value="medium" selected>Средний</option>
+                <option value="large">Большой</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Сортировка задач</label>
+            <select id="sortSelect">
+                <option value="manual">👆 Вручную</option>
+                <option value="priority">⚡ По приоритету</option>
+                <option value="date">📅 По дате</option>
+            </select>
+        </div>
+
+        <div class="form-group checkbox">
+            <label>
+                <input type="checkbox" id="soundCheckbox" checked>
+                🔊 Звуки
+            </label>
+        </div>
+
+        <div class="form-group checkbox">
+            <label>
+                <input type="checkbox" id="vibrationCheckbox" checked>
+                📳 Вибрация
+            </label>
+        </div>
+
+        <div class="form-group checkbox">
+            <label>
+                <input type="checkbox" id="notificationsCheckbox">
+                🔔 Напоминания
+            </label>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn secondary" id="closeSettings">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+        <!-- Уведомление о достижении -->
+        <div class="achievement-toast hidden" id="achievementToast">
+            <div class="toast-icon">🏆</div>
+            <div class="toast-content">
+                <div class="toast-title">Новое достижение!</div>
+                <div class="toast-message" id="toastMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+// Тест кнопки закрытия
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('closeSettings');
+    const modal = document.getElementById('settingsModal');
+    
+    if (closeBtn) {
+        console.log('Кнопка найдена!');
+        closeBtn.addEventListener('click', function() {
+            console.log('Клик сработал!');
+            modal.classList.add('hidden');
+        });
+    } else {
+        console.error('Кнопка closeSettings НЕ НАЙДЕНА!');
+    }
+    
+    // Тест открытия (для проверки)
+    const openBtn = document.getElementById('openSettings');
+    if (openBtn) {
+        openBtn.addEventListener('click', function() {
+            modal.classList.remove('hidden');
+        });
+    }
+});
+
+</script>
+<!-- ПРИНУДИТЕЛЬНЫЙ ОБРАБОТЧИК ДЛЯ ТЕСТА -->
+<script>
+(function() {
+    console.log('🔧 Принудительный обработчик запущен');
+    
+    // Ждём загрузки страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('📄 DOM загружен');
+        
+        // Кнопка открытия настроек
+        const openBtn = document.getElementById('openSettings');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeBtn = document.getElementById('closeSettings');
+        
+        console.log('openBtn:', openBtn);
+        console.log('settingsModal:', settingsModal);
+        console.log('closeBtn:', closeBtn);
+        
+        if (openBtn && settingsModal) {
+            // Удаляем все старые обработчики
+            const newOpenBtn = openBtn.cloneNode(true);
+            openBtn.parentNode.replaceChild(newOpenBtn, openBtn);
+            
+            // Добавляем новый обработчик
+            newOpenBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔓 Открываем настройки');
+                settingsModal.classList.remove('hidden');
+                console.log('Классы модалки:', settingsModal.className);
+            });
+        }
+        
+        if (closeBtn && settingsModal) {
+            // Удаляем все старые обработчики
+            const newCloseBtn = closeBtn.cloneNode(true);
+            closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+            
+            // Добавляем новый обработчик
+            newCloseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔒 Закрываем настройки');
+                settingsModal.classList.add('hidden');
+                console.log('Классы модалки после закрытия:', settingsModal.className);
+            });
+        }
+        
+        // Закрытие по клику на overlay
+        if (settingsModal) {
+            settingsModal.addEventListener('click', function(e) {
+                if (e.target === settingsModal) {
+                    console.log('👆 Клик по overlay');
+                    settingsModal.classList.add('hidden');
+                }
+            });
+        }
+    });
+})();
+</script>
+</body>
+</html>
