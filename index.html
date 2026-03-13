@@ -3,371 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FocusFlow — ежедневник</title>
+    <title>Focus — дневник</title>
     
     <!-- iOS мета-теги -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="FocusFlow">
+    <meta name="apple-mobile-web-app-title" content="Focus">
     <meta name="theme-color" content="#6C8CFF">
     
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <!-- Шрифт -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     
-    <!-- Шрифты и стили -->
+    <!-- Стили -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Библиотеки -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Манифест -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <div class="app" id="app">
-        <!-- Шапка -->
+    <div class="app">
+        <!-- ШАПКА -->
         <header class="header">
-            <div class="header-left">
-                <button class="icon-btn menu-btn" id="menuBtn">☰</button>
-            </div>
-            <h1 class="title" id="headerTitle">Мой день</h1>
-            <div class="header-right">
-                <button class="icon-btn settings-btn" id="openSettings">⚙️</button>
-            </div>
+            <button class="icon-btn" id="menuBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+            
+            <h1 class="title" id="headerTitle">Сегодня</h1>
+            
+            <button class="icon-btn" id="settingsBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    <path d="M19.4 15C18.9 16 18.1 16.7 17.2 17.2L19 20.6L15.8 19C14.9 19.5 13.8 19.8 12.7 19.9L12 24L11.3 19.9C10.2 19.8 9.1 19.4 8.2 19L5 20.6L6.8 17.2C5.9 16.7 5.1 16 4.6 15L1 16L3.4 13C3.1 12.4 3 11.7 3 11C3 10.3 3.2 9.6 3.5 9L1 6L4.6 7C5.1 6.1 5.9 5.3 6.8 4.8L5 1.4L8.2 3C9.1 2.5 10.2 2.2 11.3 2.1L12 0L12.7 2.1C13.8 2.2 14.9 2.6 15.8 3L19 1.4L17.2 4.8C18.1 5.3 19 6.1 19.5 7L23 6L20.5 9C20.8 9.6 21 10.3 21 11C21 11.7 20.8 12.4 20.5 13L23 16L19.4 15Z" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </button>
         </header>
 
-        <!-- Боковое меню (для быстрого доступа) -->
-        <div class="side-menu hidden" id="sideMenu">
-            <div class="menu-header">
-                <h2>Меню</h2>
-                <button class="close-menu" id="closeMenu">×</button>
-            </div>
-            <ul class="menu-items">
-                <li data-tab="tasks">📋 Задачи</li>
-                <li data-tab="stats">📊 Статистика</li>
-                <li data-tab="archive">📦 Архив</li>
-                <li data-tab="achievements">🏆 Достижения</li>
-            </ul>
-            
-            <!-- Streak в меню -->
-            <div class="menu-streak">
-                <span>🔥 Серия</span>
-                <span class="streak-value" id="menuStreak">0</span>
+        <!-- БОКОВОЕ МЕНЮ -->
+        <div class="side-menu" id="sideMenu">
+            <div class="menu-backdrop" id="menuBackdrop"></div>
+            <div class="menu-panel">
+                <div class="menu-header">
+                    <span class="menu-title">Меню</span>
+                    <button class="close-btn" id="closeMenu">✕</button>
+                </div>
+                
+                <div class="user-streak">
+                    <span class="streak-fire">🔥</span>
+                    <span class="streak-days" id="menuStreak">0</span>
+                    <span class="streak-label">дней подряд</span>
+                </div>
+                
+                <nav class="menu-nav">
+                    <a href="#" class="menu-item active" data-tab="today">
+                        <span>📋</span> Сегодня
+                    </a>
+                    <a href="#" class="menu-item" data-tab="focus">
+                        <span>🎯</span> Фокус
+                    </a>
+                    <a href="#" class="menu-item" data-tab="stats">
+                        <span>📊</span> Статистика
+                    </a>
+                    <a href="#" class="menu-item" data-tab="rewards">
+                        <span>🏆</span> Награды
+                    </a>
+                </nav>
             </div>
         </div>
 
-        <!-- Основное содержимое -->
+        <!-- ОСНОВНОЙ КОНТЕНТ -->
         <main class="main" id="mainContent">
-            <!-- Вкладка ЗАДАЧИ -->
-            <div class="tab-content active" id="tasksTab">
-                <div class="task-stats-header">
-                    <div class="streak-badge">
-                        <span>🔥</span>
-                        <span id="streakDisplay">0</span>
-                    </div>
-                    <div class="points-badge">
-                        <span>⭐</span>
-                        <span id="pointsDisplay">0</span>
-                    </div>
-                    <div class="level-badge">
-                        <span>📊 Ур.</span>
-                        <span id="levelDisplay">1</span>
-                    </div>
+            <!-- Вкладка СЕГОДНЯ -->
+            <div class="tab active" id="todayTab">
+                <div class="greeting" id="greeting">
+                    <span class="greeting-emoji" id="greetingEmoji">👋</span>
+                    <span class="greeting-text" id="greetingText">Доброе утро</span>
                 </div>
 
-                <!-- Форма добавления задачи (быстрая) -->
                 <div class="quick-add">
-                    <input type="text" class="quick-input" id="quickTaskInput" placeholder="Новая задача...">
-                    <button class="quick-add-btn" id="quickAddBtn">+</button>
+                    <input type="text" class="quick-input" id="taskInput" placeholder="Новая задача...">
+                    <button class="quick-btn" id="addTaskBtn">+</button>
                 </div>
 
-                <!-- Список задач -->
-                <div class="task-list-container">
+                <div class="tasks-section">
+                    <div class="section-header">
+                        <h2>Задачи на сегодня</h2>
+                        <span class="tasks-count" id="tasksCount">0</span>
+                    </div>
+                    
                     <ul class="task-list" id="taskList"></ul>
+                    
                     <div class="empty-state" id="emptyState">
-                        <div class="empty-icon">📝</div>
-                        <p>Нет задач. Добавьте новую!</p>
+                        <div class="empty-emoji">✨</div>
+                        <p>Все задачи выполнены</p>
+                        <p class="empty-sub">Добавьте новую задачу</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка ФОКУС -->
+            <div class="tab" id="focusTab">
+                <div class="focus-container">
+                    <div class="timer-circle">
+                        <svg width="220" height="220" viewBox="0 0 220 220">
+                            <circle cx="110" cy="110" r="100" fill="none" stroke="#E5E7EB" stroke-width="8"/>
+                            <circle cx="110" cy="110" r="100" fill="none" stroke="#6C8CFF" stroke-width="8" stroke-dasharray="628.3" stroke-dashoffset="0" id="timerProgress"/>
+                        </svg>
+                        <div class="timer-display" id="timerDisplay">25:00</div>
+                    </div>
+                    
+                    <div class="timer-controls">
+                        <button class="timer-btn primary" id="startTimer">Начать</button>
+                        <button class="timer-btn secondary" id="resetTimer">Сброс</button>
+                    </div>
+                    
+                    <div class="focus-quote" id="focusQuote">
+                        "Сосредоточься на главном"
                     </div>
                 </div>
             </div>
 
             <!-- Вкладка СТАТИСТИКА -->
-            <div class="tab-content" id="statsTab">
-                <div class="stats-header">
-                    <div class="stats-cards">
-                        <div class="stat-card">
-                            <span class="stat-icon">✅</span>
-                            <span class="stat-value" id="statToday">0</span>
-                            <span class="stat-label">сегодня</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-icon">⭐</span>
-                            <span class="stat-value" id="statPoints">0</span>
-                            <span class="stat-label">очков</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-icon">🔥</span>
-                            <span class="stat-value" id="statStreak">0</span>
-                            <span class="stat-label">дней</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-icon">📊</span>
-                            <span class="stat-value" id="statLevel">1</span>
-                            <span class="stat-label">уровень</span>
-                        </div>
+            <div class="tab" id="statsTab">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-icon">✅</span>
+                        <span class="stat-value" id="statToday">0</span>
+                        <span class="stat-label">сегодня</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">⭐</span>
+                        <span class="stat-value" id="statPoints">0</span>
+                        <span class="stat-label">очков</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🔥</span>
+                        <span class="stat-value" id="statStreak">0</span>
+                        <span class="stat-label">дней</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">📊</span>
+                        <span class="stat-value" id="statLevel">1</span>
+                        <span class="stat-label">уровень</span>
                     </div>
                 </div>
 
-                <!-- Графики -->
                 <div class="chart-container">
-                    <canvas id="weeklyChart"></canvas>
+                    <canvas id="statsChart"></canvas>
                 </div>
-
-                <div class="category-stats" id="categoryStats"></div>
             </div>
 
-            <!-- Вкладка АРХИВ -->
-            <div class="tab-content" id="archiveTab">
-                <h2 class="tab-title">Архив выполненных</h2>
-                <ul class="archive-list" id="archiveList"></ul>
-                <button class="btn secondary clear-archive-btn" id="clearArchive">Очистить архив</button>
-            </div>
-
-            <!-- Вкладка ДОСТИЖЕНИЯ -->
-            <div class="tab-content" id="achievementsTab">
-                <h2 class="tab-title">Достижения</h2>
-                <div class="achievements-grid" id="achievementsGrid"></div>
+            <!-- Вкладка НАГРАДЫ -->
+            <div class="tab" id="rewardsTab">
+                <div class="rewards-grid" id="rewardsGrid"></div>
             </div>
         </main>
 
-        <!-- Плавающие кнопки -->
-        <button class="fab" id="openAddModal">+</button>
-        <button class="ai-fab" id="aiFab">✨</button>
-
-        <!-- Модальное окно ЗАДАЧА (полное) -->
-        <div class="modal-overlay hidden" id="taskModal">
-            <div class="modal">
-                <h2 class="modal-title" id="modalTitle">Новая задача</h2>
+        <!-- МОДАЛКА ЗАДАЧИ -->
+        <div class="modal" id="taskModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Новая задача</h3>
+                    <button class="modal-close" id="closeModalBtn">✕</button>
+                </div>
+                
                 <form id="taskForm">
                     <div class="form-group">
-                        <label>Название <span class="required">*</span></label>
-                        <input type="text" id="taskText" required placeholder="Что нужно сделать?">
+                        <label for="taskTextInput">Название</label>
+                        <input type="text" id="taskTextInput" required>
                     </div>
                     
                     <div class="form-group">
-                        <label>Описание (необязательно)</label>
-                        <textarea id="taskDescription" rows="2" placeholder="Подробности..."></textarea>
+                        <label for="taskDescInput">Описание</label>
+                        <textarea id="taskDescInput" rows="2"></textarea>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group half">
-                            <label>Категория</label>
-                            <select id="taskCategory"></select>
+                            <label for="taskCategorySelect">Категория</label>
+                            <select id="taskCategorySelect">
+                                <option value="work">💼 Работа</option>
+                                <option value="personal">🏠 Личное</option>
+                                <option value="health">💪 Здоровье</option>
+                            </select>
                         </div>
+                        
                         <div class="form-group half">
-                            <label>Приоритет</label>
-                            <select id="taskPriority">
+                            <label for="taskPrioritySelect">Приоритет</label>
+                            <select id="taskPrioritySelect">
                                 <option value="low">🟢 Низкий</option>
-                                <option value="medium" selected>🟡 Средний</option>
+                                <option value="medium">🟡 Средний</option>
                                 <option value="high">🔴 Высокий</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group half">
-                            <label>Дата</label>
-                            <input type="date" id="taskDate">
-                        </div>
-                        <div class="form-group half">
-                            <label>Повтор</label>
-                            <select id="taskRepeat">
-                                <option value="">Нет</option>
-                                <option value="daily">Ежедневно</option>
-                                <option value="weekly">Еженедельно</option>
-                                <option value="monthly">Ежемесячно</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Подзадачи -->
-                    <div class="form-group">
-                        <label>Подзадачи</label>
-                        <div class="subtasks-container" id="subtasksContainer">
-                            <!-- Здесь будут динамические подзадачи -->
-                        </div>
-                        <button type="button" class="btn small secondary" id="addSubtaskBtn">+ Добавить подзадачу</button>
-                    </div>
-
-                    <div class="modal-actions">
-                        <button type="button" class="btn secondary" id="closeModal">Отмена</button>
-                        <button type="submit" class="btn primary">Сохранить</button>
-                    </div>
+                    <button type="submit" class="submit-btn">Сохранить</button>
                 </form>
             </div>
         </div>
 
-        <!-- Модальное окно НАСТРОЙКИ (исправленная версия) -->
-<div class="modal-overlay hidden" id="settingsModal">
-    <div class="modal">
-        <h2>Настройки</h2>
-        
-        <div class="form-group">
-            <label>Тема</label>
-            <select id="themeSelect">
-                <option value="auto">🌓 Авто</option>
-                <option value="light">☀️ Светлая</option>
-                <option value="dark">🌙 Тёмная</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Акцентный цвет</label>
-            <div class="color-picker">
-                <input type="color" id="accentColorPicker" value="#6C8CFF">
+        <!-- МОДАЛКА НАСТРОЕК -->
+        <div class="modal" id="settingsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Настройки</h3>
+                    <button class="modal-close" id="closeSettingsBtn">✕</button>
+                </div>
+                
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <span>Тёмная тема</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <span>Звуки</span>
+                        <label class="switch">
+                            <input type="checkbox" id="soundCheckbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <span>Вибрация</span>
+                        <label class="switch">
+                            <input type="checkbox" id="vibrationCheckbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="form-group">
-            <label>Размер шрифта</label>
-            <select id="fontSizeSelect">
-                <option value="small">Маленький</option>
-                <option value="medium" selected>Средний</option>
-                <option value="large">Большой</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Сортировка задач</label>
-            <select id="sortSelect">
-                <option value="manual">👆 Вручную</option>
-                <option value="priority">⚡ По приоритету</option>
-                <option value="date">📅 По дате</option>
-            </select>
-        </div>
-
-        <div class="form-group checkbox">
-            <label>
-                <input type="checkbox" id="soundCheckbox" checked>
-                🔊 Звуки
-            </label>
-        </div>
-
-        <div class="form-group checkbox">
-            <label>
-                <input type="checkbox" id="vibrationCheckbox" checked>
-                📳 Вибрация
-            </label>
-        </div>
-
-        <div class="form-group checkbox">
-            <label>
-                <input type="checkbox" id="notificationsCheckbox">
-                🔔 Напоминания
-            </label>
-        </div>
-
-        <div class="modal-actions">
-            <button type="button" class="btn secondary" id="closeSettings">Закрыть</button>
-        </div>
-    </div>
-</div>
-
-        <!-- Уведомление о достижении -->
-        <div class="achievement-toast hidden" id="achievementToast">
-            <div class="toast-icon">🏆</div>
-            <div class="toast-content">
-                <div class="toast-title">Новое достижение!</div>
-                <div class="toast-message" id="toastMessage"></div>
-            </div>
-        </div>
+        <!-- ТОСТЫ -->
+        <div class="toast-container" id="toastContainer"></div>
     </div>
 
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Основной скрипт -->
     <script src="script.js"></script>
-    <script>
-// Тест кнопки закрытия
-document.addEventListener('DOMContentLoaded', function() {
-    const closeBtn = document.getElementById('closeSettings');
-    const modal = document.getElementById('settingsModal');
-    
-    if (closeBtn) {
-        console.log('Кнопка найдена!');
-        closeBtn.addEventListener('click', function() {
-            console.log('Клик сработал!');
-            modal.classList.add('hidden');
-        });
-    } else {
-        console.error('Кнопка closeSettings НЕ НАЙДЕНА!');
-    }
-    
-    // Тест открытия (для проверки)
-    const openBtn = document.getElementById('openSettings');
-    if (openBtn) {
-        openBtn.addEventListener('click', function() {
-            modal.classList.remove('hidden');
-        });
-    }
-});
-
-</script>
-<!-- ПРИНУДИТЕЛЬНЫЙ ОБРАБОТЧИК ДЛЯ ТЕСТА -->
-<script>
-(function() {
-    console.log('🔧 Принудительный обработчик запущен');
-    
-    // Ждём загрузки страницы
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('📄 DOM загружен');
-        
-        // Кнопка открытия настроек
-        const openBtn = document.getElementById('openSettings');
-        const settingsModal = document.getElementById('settingsModal');
-        const closeBtn = document.getElementById('closeSettings');
-        
-        console.log('openBtn:', openBtn);
-        console.log('settingsModal:', settingsModal);
-        console.log('closeBtn:', closeBtn);
-        
-        if (openBtn && settingsModal) {
-            // Удаляем все старые обработчики
-            const newOpenBtn = openBtn.cloneNode(true);
-            openBtn.parentNode.replaceChild(newOpenBtn, openBtn);
-            
-            // Добавляем новый обработчик
-            newOpenBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🔓 Открываем настройки');
-                settingsModal.classList.remove('hidden');
-                console.log('Классы модалки:', settingsModal.className);
-            });
-        }
-        
-        if (closeBtn && settingsModal) {
-            // Удаляем все старые обработчики
-            const newCloseBtn = closeBtn.cloneNode(true);
-            closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-            
-            // Добавляем новый обработчик
-            newCloseBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🔒 Закрываем настройки');
-                settingsModal.classList.add('hidden');
-                console.log('Классы модалки после закрытия:', settingsModal.className);
-            });
-        }
-        
-        // Закрытие по клику на overlay
-        if (settingsModal) {
-            settingsModal.addEventListener('click', function(e) {
-                if (e.target === settingsModal) {
-                    console.log('👆 Клик по overlay');
-                    settingsModal.classList.add('hidden');
-                }
-            });
-        }
-    });
-})();
-</script>
 </body>
 </html>
